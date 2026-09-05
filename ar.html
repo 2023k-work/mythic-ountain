@@ -7,7 +7,7 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <title>Butterfly AR / Tracking Skeleton</title>
+    <title>Butterfly AR / Multi-target Tracking</title>
   </head>
   <body class="ar-immersive">
     <main class="ar-shell">
@@ -21,14 +21,14 @@
           <div class="ar-frame" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
           <div class="ar-stage-message">
             <span class="stage-kicker">MINDAR IMAGE TARGET</span>
-            <strong>Point camera<br />at M1</strong>
+            <strong>Point camera<br />at M1-M5</strong>
           </div>
         </div>
 
         <aside class="ar-panel">
-          <div class="panel-tag"><span class="status-dot"></span><span id="target-badge">M1 / READY</span></div>
+          <div class="panel-tag"><span class="status-dot"></span><span id="target-badge">M1-M5 / READY</span></div>
           <h1>讓翅膀<br /><em>貼上圖像</em></h1>
-          <p class="intro">這一頁只驗證一個 Target 的相機生命週期。偵測到 M1 後，47 隻翅膀會掛在同一個 anchor 上並跟隨它的姿態。</p>
+          <p class="intro">偵測到 M1 至 M5 任一圖像後，對應的蝴蝶群會掛在該 anchor 上並跟隨它的姿態。</p>
 
           <div class="tracking-status">
             <span class="eyebrow">TRACKING STATUS</span>
@@ -37,11 +37,11 @@
           </div>
 
           <div class="target-card">
-            <div class="target-copy"><span class="eyebrow">TARGET 00</span><strong>M1_scaled</strong><span>47 WINGS / MOUNTAIN CONTOUR</span><span>0.729 × 0.282 m</span></div>
+            <div class="target-copy"><span class="eyebrow">TARGET 00–04</span><strong>M1–M5</strong><span>147 WINGS / MOUNTAIN CONTOURS</span><span>MULTI-TARGET TRACKING</span></div>
             <img id="target-preview" src="targets/M1.jpg" alt="M1 Target 參考圖" />
           </div>
 
-          <p class="interaction-note">Target 鎖定後點一下相機畫面，全部蝴蝶會各自飛離並穿過手機位置；重新掃描 M1 才會重置。</p>
+          <p class="interaction-note">Target 鎖定後點一下相機畫面，該組蝴蝶會各自飛離並穿過手機位置；重新掃描同一張圖像才會重置。</p>
 
           <div class="ar-actions">
             <button id="start-ar" class="button button-primary">啟動相機 <span>↗</span></button>
@@ -52,7 +52,7 @@
         </aside>
       </section>
 
-      <footer class="ar-footer"><span>WING ACTOR <b>→</b> M1 ANCHOR <b>→</b> TRACKING LIFECYCLE</span><a href="./">回到動畫 Playground</a></footer>
+      <footer class="ar-footer"><span>WING ACTOR <b>→</b> M1-M5 ANCHORS <b>→</b> TRACKING LIFECYCLE</span><a href="./">回到動畫 Playground</a></footer>
     </main>
     <script type="module" src="/src/ar-main.ts"></script>
   </body>

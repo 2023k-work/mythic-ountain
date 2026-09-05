@@ -4,9 +4,9 @@ export type { MindARThreeAnchor };
 
 export class MindARImageAdapter {
   readonly runtime: MindARThree;
-  readonly anchor: MindARThreeAnchor;
+  readonly anchors: MindARThreeAnchor[];
 
-  constructor(container: HTMLElement, imageTargetSrc: string) {
+  constructor(container: HTMLElement, imageTargetSrc: string, targetCount: number) {
     this.runtime = new MindARThree({
       container,
       imageTargetSrc,
@@ -17,7 +17,7 @@ export class MindARImageAdapter {
       warmupTolerance: 5,
       missTolerance: 8,
     });
-    this.anchor = this.runtime.addAnchor(0);
+    this.anchors = Array.from({ length: targetCount }, (_, targetIndex) => this.runtime.addAnchor(targetIndex));
   }
 
   start(): Promise<void> {
