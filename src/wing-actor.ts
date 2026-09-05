@@ -7,9 +7,13 @@ import {
   MeshBasicMaterial,
   PlaneGeometry,
   SRGBColorSpace,
+  Vector3,
   type Texture,
 } from 'three';
 import { sampleWingMotion, type WingAnimationOptions } from './wing-animation';
+
+const FLIGHT_SPEED_SCALE = 0.5;
+const FLIGHT_BASE_SPEED = 0.8;
 
 export interface AlphaBounds {
   x: number;
@@ -66,18 +70,22 @@ export class WingActor {
   private readonly amplitudeVariation: number;
   private readonly driftScale: number;
   private readonly flightX: number;
-  private readonly flightY: number;
-  private readonly flightZ: number;
   private readonly flightSwayX: number;
   private readonly flightSwayY: number;
   private readonly flightSwayZ: number;
   private readonly flightFrequency: number;
+  private readonly flightSpeed: number;
   private homeZ = 0;
   private opacity = 0;
   private opacityTarget = 0;
   private flightProgress = 0;
   private flightTarget = 0;
   private flightTime = 0;
+  private flightTravel = 0;
+  private flightWingSpeed?: number;
+  private readonly flightDirection = new Vector3();
+  private readonly flightSide = new Vector3();
+  private readonly flightUp = new Vector3();
   private interaction = 0;
   private interactionTarget = 0;
   private homeX = 0;
@@ -93,12 +101,11 @@ export class WingActor {
     this.amplitudeVariation = 0.72 + Math.random() * 0.52;
     this.driftScale = driftScale;
     this.flightX = (Math.random() - 0.5) * 0.72;
-    this.flightY = 0.24 + Math.random() * 0.52;
-    this.flightZ = 0.4 + Math.random() * 0.58;
     this.flightSwayX = 0.07 + Math.random() * 0.1;
     this.flightSwayY = 0.045 + Math.random() * 0.075;
     this.flightSwayZ = 0.035 + Math.random() * 0.06;
     this.flightFrequency = 0.85 + Math.random() * 0.7;
+    this.flightSpeed = (FLIGHT_BASE_SPEED * FLIGHT_SPEED_SCALE) * (0.88 + Math.random() * 0.24);
     this.leftPivot.add(this.leftScale);
     this.rightPivot.add(this.rightScale);
     this.group.add(this.leftPivot, this.rightPivot);
@@ -124,6 +131,39 @@ export class WingActor {
   setFlying(flying: boolean): void {
     if (flying && this.flightTarget === 0) this.flightTime = 0;
     this.flightTarget = flying ? 1 : 0;
+    if (!flying) {
+      this.flightTravel = 0;
+      this.flightWingSpeed = undefined;
+    }
+  }
+
+  setFlightCameraTarget(cameraPosition: Vector3): void {
+    this.flightDirection.set(
+      cameraPosition.x - this.homeX,
+      cameraPosition.y - this.homeY,
+      cameraPosition.z - this.homeZ,
+    );
+    if (this.flightDirection.lengthSq() < 0.000001) {
+      this.flightDirection.set(0, 0, 1);
+    } else {
+      this.flightDirection.normalize();
+    }
+
+    // Build two directions perpendicular to the camera path, then sample a random direction
+    // inside a cone. The direction is captured once at launch; there is no destination point.
+    this.flightSide.set(-this.flightDirection.y, this.flightDirection.x, 0);
+    if (this.flightSide.lengthSq() < 0.000001) this.flightSide.set(1, 0, 0);
+    else this.flightSide.normalize();
+    this.flightUp.crossVectors(this.flightDirection, this.flightSide).normalize();
+
+    const coneAngle = 0.24 + Math.random() * 0.22;
+    const coneCosine = Math.cos(coneAngle);
+    const coneSine = Math.sin(coneAngle);
+    const coneAzimuth = Math.random() * Math.PI * 2;
+    this.flightDirection.multiplyScalar(coneCosine)
+      .addScaledVector(this.flightSide, coneSine * Math.cos(coneAzimuth))
+      .addScaledVector(this.flightUp, coneSine * Math.sin(coneAzimuth))
+      .normalize();
   }
 
   setVariant(variant: PreparedWingVariant): void {
@@ -168,8 +208,13 @@ export class WingActor {
     const flightFactor = 1 - Math.exp((-Math.LN2 * Math.min(Math.max(deltaSeconds, 0), 0.1)) / 0.24);
     this.flightProgress += (this.flightTarget - this.flightProgress) * flightFactor;
     const flightEase = this.flightProgress * this.flightProgress * (3 - 2 * this.flightProgress);
-    if (this.flightTarget === 1) this.flightTime += deltaSeconds;
-    const flightDistance = flightEase * Math.min(this.flightTime / 2.4, 1);
+    const idleWingSpeed = options.speed * this.speedVariation * (1 + this.interaction * 0.12);
+    if (this.flightTarget === 1 && this.flightWingSpeed === undefined) this.flightWingSpeed = idleWingSpeed;
+    if (this.flightTarget === 1) {
+      this.flightTime += deltaSeconds;
+      this.flightTravel += deltaSeconds * this.flightSpeed;
+    }
+    const flightDistance = flightEase * this.flightTravel;
     const flightWaveTime = this.flightTime * this.flightFrequency * Math.PI * 2;
     const weaveX = Math.sin(flightWaveTime + this.phase) - Math.sin(this.phase);
     const weaveY = Math.sin(flightWaveTime * 0.79 + this.phase * 0.63) - Math.sin(this.phase * 0.63);
@@ -184,7 +229,7 @@ export class WingActor {
     }
     this.interaction += (this.interactionTarget - this.interaction) * 0.12;
     const sample = sampleWingMotion(time, this.phase, {
-      speed: options.speed * this.speedVariation * (1 + this.interaction * 0.12 + flightEase * 0.16),
+      speed: this.flightWingSpeed ?? idleWingSpeed,
       amplitude: options.amplitude * this.amplitudeVariation * (1 + this.interaction * 0.18 + flightEase * 0.1),
       burst: options.burst,
     });
@@ -192,9 +237,9 @@ export class WingActor {
     const idleY = (Math.sin(time * 0.53 + this.phase * 1.2) * 0.095 + Math.cos(time * 0.23 + this.phase) * 0.04) * this.driftScale;
     const burstEase = motion.burst * motion.burst;
 
-    const flightPathX = this.flightX * flightDistance + weaveX * this.flightSwayX * flightEase;
-    const flightPathY = this.flightY * flightDistance + weaveY * this.flightSwayY * flightEase;
-    const flightPathZ = this.flightZ * flightDistance + weaveZ * this.flightSwayZ * flightEase;
+    const flightPathX = this.flightDirection.x * flightDistance + weaveX * this.flightSwayX * flightEase;
+    const flightPathY = this.flightDirection.y * flightDistance + weaveY * this.flightSwayY * flightEase;
+    const flightPathZ = this.flightDirection.z * flightDistance + weaveZ * this.flightSwayZ * flightEase;
     this.group.position.x = this.homeX + idleX + flightPathX + motion.burstX * burstEase;
     this.group.position.y = this.homeY + idleY + flightPathY + motion.burstY * burstEase + this.interaction * 0.04;
     this.group.position.z = this.homeZ + flightPathZ;

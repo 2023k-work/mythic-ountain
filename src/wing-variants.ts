@@ -6,7 +6,7 @@ export const wingVariantIds: readonly WingVariantId[] = Array.from(
 );
 
 export function wingVariantUrl(id: WingVariantId): string {
-  return `/assets/wings-${id}.png`;
+  return `${import.meta.env.BASE_URL}assets/wings-${id}.png`;
 }
 
 export function randomWingVariantId(): WingVariantId {

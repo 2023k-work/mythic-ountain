@@ -2,7 +2,9 @@
 
 :root { color-scheme: dark; font-family: 'Manrope', system-ui, sans-serif; color: #f4f0e9; background: #11120f; --paper: #f4f0e9; --muted: #918e85; --line: rgba(244, 240, 233, .15); --accent: #d5f06d; --panel: #1a1b18; }
 * { box-sizing: border-box; }
+html, body { min-height: 100%; }
 body { margin: 0; min-width: 320px; background: #11120f; }
+body.ar-immersive { overflow: hidden; overscroll-behavior: none; }
 a { color: inherit; }
 button { font: inherit; cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: .35; }
@@ -54,6 +56,21 @@ h1 em { color: var(--accent); font-style: normal; }
 body[data-tracking-state='found'] .ar-frame { border-color: rgba(213, 240, 109, .8); inset: 12% 10%; }
 body[data-tracking-state='found'] .ar-stage-message, body[data-tracking-state='grace'] .ar-stage-message { opacity: 0; }
 body[data-tracking-state='denied'] .ar-stage-message strong::after { content: 'Camera permission needed'; display: block; margin-top: 18px; color: var(--accent); font: 10px 'DM Mono', monospace; letter-spacing: .05em; }
+
+/* Immersive AR entry: keep the camera/canvas fixed to the visual viewport and retain only status UI. */
+.ar-immersive .ar-shell { width: 100%; height: 100dvh; margin: 0; padding: 0; }
+.ar-immersive .ar-header, .ar-immersive .ar-footer { display: none; }
+.ar-immersive .ar-layout { display: block; width: 100%; height: 100%; margin: 0; }
+.ar-immersive .ar-stage { position: fixed; inset: 0; width: 100vw; height: 100dvh; min-height: 0; border: 0; touch-action: manipulation; }
+.ar-immersive .ar-panel { position: fixed; z-index: 5; top: 0; right: 0; left: 0; min-height: 0; height: auto; padding: calc(14px + env(safe-area-inset-top)) 18px 16px; border: 0; background: linear-gradient(180deg, rgba(17, 18, 15, .82), rgba(17, 18, 15, 0)); pointer-events: none; }
+.ar-immersive .ar-panel h1, .ar-immersive .ar-panel .intro, .ar-immersive .ar-panel .target-card, .ar-immersive .ar-panel .interaction-note, .ar-immersive .ar-panel .ar-actions, .ar-immersive .ar-panel .permission-note { display: none; }
+.ar-immersive .tracking-status { margin: 9px 0 0; padding: 0; border: 0; }
+.ar-immersive .tracking-status strong { margin-top: 5px; font-size: 17px; }
+.ar-immersive .tracking-status p { max-width: 340px; margin-top: 4px; color: rgba(244, 240, 233, .72); }
+
+@supports not (height: 100dvh) {
+  .ar-immersive .ar-shell, .ar-immersive .ar-stage { height: 100vh; }
+}
 
 @media (max-width: 900px) { .ar-shell { width: min(100% - 32px, 700px); } .ar-layout { grid-template-columns: 1fr; } .ar-stage, .ar-panel { min-height: 0; } .ar-stage { height: 62vh; min-height: 430px; } .ar-panel { min-height: 560px; } }
 @media (max-width: 500px) { .ar-shell { width: calc(100% - 24px); padding-top: 22px; } .ar-header { align-items: flex-start; gap: 12px; flex-direction: column-reverse; } .ar-stage { height: 65vh; min-height: 390px; } .ar-panel { padding: 25px 20px 21px; } .ar-footer { gap: 14px; flex-direction: column; } }

@@ -1,4 +1,4 @@
-import { Group, Matrix4 } from 'three';
+import { Group, Matrix4, Vector3 } from 'three';
 import './ar-style.css';
 import { M1ExperienceController } from './m1-experience-controller';
 import { m1ButterflyPositions } from './m1-group-manifest';
@@ -17,7 +17,7 @@ const targetBadge = document.querySelector<HTMLSpanElement>('#target-badge')!;
 const targetPreview = document.querySelector<HTMLImageElement>('#target-preview')!;
 
 const STATUS_TEXT = {
-  idle: ['尚未啟動', '按下啟動相機，開始尋找 M1 Target。'],
+  idle: ['尚未啟動', '正在自動啟動相機，準備尋找 M1 Target。'],
   loading: ['準備中', '正在請求相機權限並載入追蹤資料。'],
   scanning: ['掃描中', '請將 M1 圖像放入相機畫面。'],
   found: ['Target found', 'M1 已鎖定，翅膀正在跟隨 Target anchor。'],
@@ -43,6 +43,8 @@ let startInFlight = false;
 let lastPoseUpdateAt = 0;
 let trackingGeneration = 0;
 const poseStabilizer = new PoseStabilizer();
+const cameraWorldPosition = new Vector3();
+const cameraLocalPosition = new Vector3();
 const experience = new M1ExperienceController({
   onRevealGroup: () => actors.forEach((item) => item.setRevealed(true)),
   onFadeOutGroup: () => actors.forEach((item) => item.setRevealed(false)),
@@ -68,10 +70,26 @@ function setButtons(): void {
   stopButton.disabled = !trackingAdapter || trackingState === 'idle';
 }
 
+function requestImmersiveFullscreen(): void {
+  if (document.fullscreenElement || !document.documentElement.requestFullscreen) return;
+  void document.documentElement.requestFullscreen().catch(() => {
+    // Fullscreen API requires a user gesture on most mobile browsers; CSS viewport mode remains active.
+  });
+}
+
 function retainAnchorDuringGrace(): void {
   if (!contentRoot || !hasVisibleMatrix) return;
   contentRoot.matrix.copy(lastVisibleMatrix);
   contentRoot.visible = true;
+}
+
+function captureFlightDirectionsFromCamera(): void {
+  if (!contentRoot || !trackingAdapter || experience.getState() !== 'groupFlying') return;
+  const runtime = trackingAdapter.runtime;
+  runtime.scene.updateMatrixWorld(true);
+  runtime.camera.getWorldPosition(cameraWorldPosition);
+  contentRoot.worldToLocal(cameraLocalPosition.copy(cameraWorldPosition));
+  actors.forEach((item) => item.setFlightCameraTarget(cameraLocalPosition));
 }
 
 function connectTrackingEvents(nextAnchor: MindARThreeAnchor): void {
@@ -244,11 +262,20 @@ function stopTrackingRuntime(): void {
 startButton.addEventListener('click', () => void startTracking());
 stopButton.addEventListener('click', stopTracking);
 arStage.addEventListener('click', () => {
+  requestImmersiveFullscreen();
+  if (trackingState === 'denied' || trackingState === 'insecure' || trackingState === 'error') {
+    void startTracking();
+    return;
+  }
   if (trackingState !== 'found') return;
-  if (experience.launchGroup()) statusDetail.textContent = '群飛已啟動；重新掃描 M1 才會重置。';
+  if (experience.launchGroup()) {
+    captureFlightDirectionsFromCamera();
+    statusDetail.textContent = '群飛已穿過手機位置；重新掃描 M1 才會重置。';
+  }
 });
 targetPreview.addEventListener('error', () => {
   targetPreview.alt = 'M1 Target 預覽載入失敗';
 });
 setTrackingState('idle');
 setButtons();
+void startTracking();

@@ -28,10 +28,10 @@ if (!stage || !countInput || !speedInput || !amplitudeInput || !countValue || !s
 }
 
 const variantUrls: Record<VariantId, string> = {
-  '02': '/assets/wings-02.png',
-  '10': '/assets/wings-10.png',
-  '20': '/assets/wings-20.png',
-  '57': '/assets/wings-57.png',
+  '02': `${import.meta.env.BASE_URL}assets/wings-02.png`,
+  '10': `${import.meta.env.BASE_URL}assets/wings-10.png`,
+  '20': `${import.meta.env.BASE_URL}assets/wings-20.png`,
+  '57': `${import.meta.env.BASE_URL}assets/wings-57.png`,
 };
 
 const scene = new Scene();

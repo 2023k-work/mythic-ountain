@@ -22,7 +22,7 @@ export const targetManifest: TargetManifest = {
       id: 'M1',
       sourceName: 'M1_scaled',
       targetIndex: 0,
-      imageTargetSrc: '/targets/M1.mind',
+      imageTargetSrc: `${import.meta.env.BASE_URL}targets/M1.mind`,
       physicalSize: { width: 0.729, height: 0.28183562 },
       // 以 target 中心為基準；z 讓透明翅膀落在圖像平面前方。
       anchorOffset: { x: 0, y: 0.06, z: 0.08 },

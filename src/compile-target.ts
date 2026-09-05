@@ -9,7 +9,7 @@ declare global {
 const progress = document.querySelector<HTMLDivElement>('#progress')!;
 const result = document.querySelector<HTMLDivElement>('#result')!;
 const image = new Image();
-image.src = '/targets/M1.jpg';
+image.src = `${import.meta.env.BASE_URL}targets/M1.jpg`;
 
 image.onload = async () => {
   try {
@@ -33,5 +33,5 @@ image.onload = async () => {
 };
 
 image.onerror = () => {
-  progress.textContent = 'Could not load /targets/M1.jpg';
+  progress.textContent = 'Could not load M1.jpg';
 };
