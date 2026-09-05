@@ -1,61 +1,54 @@
-# Butterfly Wing Lab
+# mythic-ountain｜變奏仙山
 
-Slice 4 of the web AR conversion. It contains a local wing animation playground and an M1
-MindAR target with 47 wing-only actors positioned from the source M1 prefab.
+以山脈圖片作為辨識目標的網頁 AR 作品。偵測成功後，畫面會出現 47 隻只由翅膀構成的
+蝴蝶，並以 57 種翅膀變奏、不同大小與獨立揮翅節奏呈現群飛效果。
 
-## Run
+## AR 頁面
+
+- AR 頁面網址：<https://2023k-work.github.io/mythic-ountain/ar.html>
+- 專案首頁：<https://2023k-work.github.io/mythic-ountain/>
+
+<p align="center">
+  <img src="public/ar-qr-code.png" alt="AR 頁面 QR 圖碼" width="280" />
+</p>
+
+## 掃描圖片
+
+請使用手機相機掃描下方的 M1 山脈圖片；圖片越完整、光線越均勻，辨識效果越穩定。
+
+<p align="center">
+  <img src="public/targets/M1.jpg" alt="M1 山脈 AR 掃描圖片" width="729" />
+</p>
+
+## 使用說明
+
+### 使用手機體驗
+
+1. 使用手機的 Safari 或 Chrome 開啟上方 AR 頁面網址。
+2. 允許瀏覽器使用相機；頁面進入後會自動啟動相機。
+3. 將手機對準上方的 M1 山脈圖片，等待蝴蝶逐漸浮現。
+4. 偵測成功後，點擊一次相機畫面，全部蝴蝶會朝手機後方以圓錐狀方向擴散飛離。
+5. 蝴蝶飛離後不會自動回來；重新掃描 M1 圖片才會重置。
+
+### 本機執行
 
 ```powershell
 npm install
 npm run dev
 ```
 
-Open the local Vite URL shown in the terminal. For a production build:
+手機測試時，請使用終端機顯示的 HTTPS 區域網路網址，例如：
+`https://192.168.1.197:5173/ar.html`。第一次開啟可能會遇到自簽憑證警告，請允許繼續存取；
+HTTP 網址無法使用手機相機。
+
+### 更新 GitHub Pages
+
+修改程式後，請以 GitHub Pages 的專案路徑重新建置，再將建置結果同步到 `docs/`：
 
 ```powershell
+$env:VITE_BASE_PATH = '/mythic-ountain/'
 npm run build
-npm run preview
+Remove-Item Env:VITE_BASE_PATH
 ```
 
-The GitHub Pages deployment serves the committed `main/docs` build at
-`https://2023k-work.github.io/mythic-ountain/`; the AR entry is
-`https://2023k-work.github.io/mythic-ountain/ar.html`. To refresh the published files after a
-source change, build with `VITE_BASE_PATH=/mythic-ountain/` and copy the resulting `dist/` content
-into `docs/` before committing and pushing.
-
-For phone camera testing, open the HTTPS LAN URL printed by Vite, for example
-`https://192.168.1.197:5173/ar.html`. The first visit may show a self-signed certificate warning;
-the browser must be allowed to continue. Plain `http://192.168.1.197:5173` is not a valid camera
-origin for this test.
-
-To regenerate the single-image tracking file after changing `public/targets/M1.jpg`, keep the dev
-server running and execute:
-
-```powershell
-npm run compile:target
-```
-
-## Current scope
-
-- Wing-only rendering; no FBX, body mesh, Unity Animator, or GLB is used.
-- `/ar.html` is an immersive full-viewport entry: it starts the camera automatically and hides all
-  page text and setup controls; page scrolling is disabled.
-- The page adds one `M1_scaled` image target with camera permission, scanning, found, grace, lost,
-  and error states.
-- The M1 group creates 47 wing-only actors from the source `M1.prefab` positions, normalized by
-  the M1 target width so they follow the source mountain composition.
-- Each actor randomly selects one of the 57 wing appearance variants and a size between 0.075 m
-  and 0.14 m. Variant files are loaded in the background with a four-request limit.
-- After M1 is found, click/tap the camera view once to launch all butterflies with individual
-  curved motion toward the camera's rear. Flight uses a 0.5x speed scale and samples a
-  cone-shaped outward direction per butterfly; there is no fixed final position. Wingbeat speed
-  is captured at launch and held for the duration of the flight. The group remains departed until
-  M1 is fully lost and scanned again.
-- Runtime alpha-bound detection crops each side of the source wing texture.
-- Wing roots are used as pivots so the two transparent sprites can flap independently.
-- The controls demonstrate count, speed, amplitude, four representative appearance variants,
-  pause/play, and a short group-flight burst.
-
-The source textures remain under `../Assets/`; all 57 raw variants are copied into
-`public/assets/`. The complete atlas/compression step is still pending. The M1 positions are
-source-aligned, but final visual calibration on a physical phone is still pending.
+將 `dist/` 內容複製到 `docs/` 後提交並推送至 `main`，GitHub Pages 就會更新網站。
