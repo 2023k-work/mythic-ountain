@@ -26,6 +26,8 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 .ar-frame span:nth-child(2) { top: -1px; right: -1px; border-width: 2px 2px 0 0; }
 .ar-frame span:nth-child(3) { bottom: -1px; left: -1px; border-width: 0 0 2px 2px; }
 .ar-frame span:nth-child(4) { right: -1px; bottom: -1px; border-width: 0 2px 2px 0; }
+.github-page-link { position: absolute; z-index: 4; top: calc(14px + env(safe-area-inset-top)); right: calc(14px + env(safe-area-inset-right)); padding: 7px 9px; color: rgba(244, 240, 233, .78); background: rgba(17, 18, 15, .48); border: 1px solid rgba(244, 240, 233, .2); border-radius: 3px; font: 10px 'DM Mono', monospace; letter-spacing: .04em; text-decoration: none; backdrop-filter: blur(8px); transition: color .2s, border-color .2s, background .2s; }
+.github-page-link:hover, .github-page-link:focus-visible { color: var(--accent); background: rgba(17, 18, 15, .72); border-color: rgba(213, 240, 109, .58); outline: none; }
 .ar-stage-message { position: absolute; z-index: 2; top: 52%; left: 50%; color: rgba(244, 240, 233, .74); text-align: center; transform: translate(-50%, -50%); pointer-events: none; }
 .stage-kicker { display: block; margin-bottom: 11px; font-size: 9px; }
 .ar-stage-message strong { display: block; font-size: clamp(27px, 4vw, 51px); line-height: .94; letter-spacing: -.07em; }
