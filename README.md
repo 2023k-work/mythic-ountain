@@ -12,14 +12,25 @@
   <img src="public/ar-qr-code.png" alt="AR 頁面 QR 圖碼" width="280" />
 </p>
 
-## 目前可掃描圖片
+## Asset 掃描圖片
 
-目前 AR 辨識目標共 1 張：M1 山脈圖片。請使用手機相機掃描下方圖片；圖片越完整、光線越
-均勻，辨識效果越穩定。
+已從原始 Asset 提取 M1 至 M5 共 5 張掃描圖片。請注意，目前 AR 辨識程式已啟用的目標仍為
+M1；M2 至 M5 已整理到專案中，後續可再編譯為多目標辨識資料。
 
-<p align="center">
-  <img src="public/targets/M1.jpg" alt="M1 山脈 AR 掃描圖片" width="729" />
-</p>
+<table>
+  <tr>
+    <td align="center"><strong>M1</strong><br /><img src="public/targets/M1.jpg" alt="M1 山脈 AR 掃描圖片" width="300" /></td>
+    <td align="center"><strong>M2</strong><br /><img src="public/targets/M2.jpg" alt="M2 山脈 AR 掃描圖片" width="300" /></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>M3</strong><br /><img src="public/targets/M3.jpg" alt="M3 山脈 AR 掃描圖片" width="300" /></td>
+    <td align="center"><strong>M4</strong><br /><img src="public/targets/M4.jpg" alt="M4 山脈 AR 掃描圖片" width="300" /></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>M5</strong><br /><img src="public/targets/M5.jpg" alt="M5 山脈 AR 掃描圖片" width="300" /></td>
+    <td></td>
+  </tr>
+</table>
 
 ## 使用說明
 
