@@ -6,7 +6,6 @@
 ## AR 頁面
 
 - AR 頁面網址：<https://2023k-work.github.io/mythic-ountain/ar.html>
-- 專案首頁：<https://2023k-work.github.io/mythic-ountain/>
 
 <p align="center">
   <img src="public/ar-qr-code.png" alt="AR 頁面 QR 圖碼" width="280" />
@@ -64,3 +63,6 @@ Remove-Item Env:VITE_BASE_PATH
 ```
 
 將 `dist/` 內容複製到 `docs/` 後提交並推送至 `main`，GitHub Pages 就會更新網站。
+
+
+- 專案首頁：<https://2023k-work.github.io/mythic-ountain/>
