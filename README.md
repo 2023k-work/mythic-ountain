@@ -12,9 +12,10 @@
   <img src="public/ar-qr-code.png" alt="AR 頁面 QR 圖碼" width="280" />
 </p>
 
-## 掃描圖片
+## 目前可掃描圖片
 
-請使用手機相機掃描下方的 M1 山脈圖片；圖片越完整、光線越均勻，辨識效果越穩定。
+目前 AR 辨識目標共 1 張：M1 山脈圖片。請使用手機相機掃描下方圖片；圖片越完整、光線越
+均勻，辨識效果越穩定。
 
 <p align="center">
   <img src="public/targets/M1.jpg" alt="M1 山脈 AR 掃描圖片" width="729" />
