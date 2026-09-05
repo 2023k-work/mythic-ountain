@@ -38,8 +38,8 @@ npm run compile:target
 ## Current scope
 
 - Wing-only rendering; no FBX, body mesh, Unity Animator, or GLB is used.
-- `/ar.html` is an immersive full-viewport entry: it starts the camera automatically and exposes
-  only a small tracking status overlay; page scrolling and setup buttons are hidden.
+- `/ar.html` is an immersive full-viewport entry: it starts the camera automatically and hides all
+  page text and setup controls; page scrolling is disabled.
 - The page adds one `M1_scaled` image target with camera permission, scanning, found, grace, lost,
   and error states.
 - The M1 group creates 47 wing-only actors from the source `M1.prefab` positions, normalized by
