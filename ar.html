@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#11120f" />
+    <title>Butterfly AR / Tracking Skeleton</title>
+  </head>
+  <body>
+    <main class="ar-shell">
+      <section class="ar-header">
+        <a class="back-link" href="/">← Wing Lab</a>
+        <span class="eyebrow">SLICE 02 / IMAGE TRACKING SKELETON</span>
+      </section>
+
+      <section class="ar-layout">
+        <div id="ar-stage" class="ar-stage" aria-label="AR 相機與追蹤畫面">
+          <div class="ar-frame" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          <div class="ar-stage-message">
+            <span class="stage-kicker">MINDAR IMAGE TARGET</span>
+            <strong>Point camera<br />at M1</strong>
+          </div>
+        </div>
+
+        <aside class="ar-panel">
+          <div class="panel-tag"><span class="status-dot"></span><span id="target-badge">M1 / READY</span></div>
+          <h1>讓翅膀<br /><em>貼上圖像</em></h1>
+          <p class="intro">這一頁只驗證一個 Target 的相機生命週期。偵測到 M1 後，47 隻翅膀會掛在同一個 anchor 上並跟隨它的姿態。</p>
+
+          <div class="tracking-status">
+            <span class="eyebrow">TRACKING STATUS</span>
+            <strong id="tracking-status">尚未啟動</strong>
+            <p id="tracking-detail">按下啟動相機，開始尋找 M1 Target。</p>
+          </div>
+
+          <div class="target-card">
+            <div class="target-copy"><span class="eyebrow">TARGET 00</span><strong>M1_scaled</strong><span>47 WINGS / MOUNTAIN CONTOUR</span><span>0.729 × 0.282 m</span></div>
+            <img id="target-preview" src="/targets/M1.jpg" alt="M1 Target 參考圖" />
+          </div>
+
+          <p class="interaction-note">Target 鎖定後點一下相機畫面，全部蝴蝶會各自飛離；重新掃描 M1 才會重置。</p>
+
+          <div class="ar-actions">
+            <button id="start-ar" class="button button-primary">啟動相機 <span>↗</span></button>
+            <button id="stop-ar" class="button button-secondary">停止</button>
+          </div>
+
+          <p class="permission-note">相機只在 localhost 或 HTTPS 上可用。此頁面不會儲存影像，也不會上傳相機畫面。</p>
+        </aside>
+      </section>
+
+      <footer class="ar-footer"><span>WING ACTOR <b>→</b> M1 ANCHOR <b>→</b> TRACKING LIFECYCLE</span><a href="/">回到動畫 Playground</a></footer>
+    </main>
+    <script type="module" src="/src/ar-main.ts"></script>
+  </body>
+</html>

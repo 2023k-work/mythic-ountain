@@ -1,0 +1,1 @@
+{"root":["./src/ar-main.ts","./src/compile-target.ts","./src/m1-experience-controller.ts","./src/m1-group-manifest.ts","./src/main.ts","./src/mind-ar.d.ts","./src/mindar-image-adapter.ts","./src/pose-stabilizer.ts","./src/target-manifest.ts","./src/wing-actor.ts","./src/wing-animation.ts","./src/wing-variants.ts"],"version":"5.9.3"}
