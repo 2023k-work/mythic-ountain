@@ -13,7 +13,6 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        playground: 'index.html',
         ar: 'ar.html',
         targetCompiler: 'target-compiler.html',
       },

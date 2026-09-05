@@ -15,7 +15,7 @@ const statusValue = document.querySelector<HTMLSpanElement>('#tracking-status')!
 const statusDetail = document.querySelector<HTMLParagraphElement>('#tracking-detail')!;
 const targetBadge = document.querySelector<HTMLSpanElement>('#target-badge')!;
 const targetPreview = document.querySelector<HTMLImageElement>('#target-preview')!;
-const githubPageLink = document.querySelector<HTMLAnchorElement>('.github-page-link')!;
+const repositoryLink = document.querySelector<HTMLAnchorElement>('.repository-link')!;
 
 const targetLabel = 'M1-M5';
 const STATUS_TEXT = {
@@ -345,7 +345,7 @@ arStage.addEventListener('click', () => {
     statusDetail.textContent = `${activeRuntime.target.id} 群飛已穿過手機位置；重新掃描 ${activeRuntime.target.id} 才會重置。`;
   }
 });
-githubPageLink.addEventListener('click', (event) => event.stopPropagation());
+repositoryLink.addEventListener('click', (event) => event.stopPropagation());
 targetPreview.addEventListener('error', () => {
   targetPreview.alt = 'AR Target 預覽載入失敗';
 });
