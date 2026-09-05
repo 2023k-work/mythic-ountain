@@ -80,8 +80,6 @@ export class WingActor {
   private flightTarget = 0;
   private flightTime = 0;
   private flightWingSpeed?: number;
-  private flightPassedCamera = false;
-  private flightApproachDistance = 0;
   private readonly flightApproach = new Vector3();
   private readonly flightDirection = new Vector3();
   private readonly flightSide = new Vector3();
@@ -136,8 +134,6 @@ export class WingActor {
     if (!flying) {
       this.flightPosition.set(0, 0, 0);
       this.flightOffset.set(0, 0, 0);
-      this.flightPassedCamera = false;
-      this.flightApproachDistance = 0;
       this.flightWingSpeed = undefined;
     }
   }
@@ -148,16 +144,14 @@ export class WingActor {
       cameraPosition.y - this.homeY,
       cameraPosition.z - this.homeZ,
     );
-    this.flightApproachDistance = this.flightApproach.length();
-    if (this.flightApproachDistance < 0.000001) {
+    if (this.flightApproach.lengthSq() < 0.000001) {
       this.flightApproach.set(0, 0, 1);
-      this.flightApproachDistance = 1;
     } else {
       this.flightApproach.normalize();
     }
 
-    // Match the Unity movement: approach the camera first, then turn into a random direction
-    // inside the rearward cone. The post-camera path has no destination point.
+    // Match the Unity movement's smooth turning, while entering the rearward cone immediately
+    // on takeoff. The path has no destination point.
     this.flightSide.set(-this.flightApproach.y, this.flightApproach.x, 0);
     if (this.flightSide.lengthSq() < 0.000001) this.flightSide.set(1, 0, 0);
     else this.flightSide.normalize();
@@ -171,9 +165,8 @@ export class WingActor {
       .addScaledVector(this.flightSide, coneSine * Math.cos(coneAzimuth))
       .addScaledVector(this.flightUp, coneSine * Math.sin(coneAzimuth))
       .normalize();
-    this.flightHeading.copy(this.flightApproach);
+    this.flightHeading.copy(this.flightDirection);
     this.flightPosition.set(0, 0, 0);
-    this.flightPassedCamera = false;
   }
 
   setVariant(variant: PreparedWingVariant): void {
@@ -223,20 +216,14 @@ export class WingActor {
     if (this.flightTarget === 1) {
       this.flightTime += deltaSeconds;
       const travel = deltaSeconds * this.flightSpeed;
-      this.flightDesiredHeading.copy(this.flightPassedCamera ? this.flightDirection : this.flightApproach);
-      if (this.flightPassedCamera) {
-        const wanderTime = this.flightTime * this.flightFrequency * Math.PI * 2;
-        this.flightDesiredHeading
-          .addScaledVector(this.flightSide, Math.sin(wanderTime + this.phase) * this.flightWander)
-          .addScaledVector(this.flightUp, Math.cos(wanderTime * 0.73 + this.phase * 0.61) * this.flightWander * 0.72)
-          .normalize();
-      }
-      const turnFactor = 1 - Math.exp(-this.flightTurnRate * (this.flightPassedCamera ? 0.72 : 1.4) * Math.min(Math.max(deltaSeconds, 0), 0.1));
+      const wanderTime = this.flightTime * this.flightFrequency * Math.PI * 2;
+      this.flightDesiredHeading.copy(this.flightDirection)
+        .addScaledVector(this.flightSide, Math.sin(wanderTime + this.phase) * this.flightWander)
+        .addScaledVector(this.flightUp, Math.cos(wanderTime * 0.73 + this.phase * 0.61) * this.flightWander * 0.72)
+        .normalize();
+      const turnFactor = 1 - Math.exp(-this.flightTurnRate * 0.72 * Math.min(Math.max(deltaSeconds, 0), 0.1));
       this.flightHeading.lerp(this.flightDesiredHeading, turnFactor).normalize();
       this.flightPosition.addScaledVector(this.flightHeading, travel);
-      if (!this.flightPassedCamera && this.flightPosition.dot(this.flightApproach) >= this.flightApproachDistance) {
-        this.flightPassedCamera = true;
-      }
     }
     this.flightOffset.copy(this.flightPosition).multiplyScalar(flightEase);
     if (this.leftMesh) this.leftMesh.material.opacity = this.opacity;
@@ -261,7 +248,7 @@ export class WingActor {
     this.group.position.x = this.homeX + idleX + this.flightOffset.x + motion.burstX * burstEase;
     this.group.position.y = this.homeY + idleY + this.flightOffset.y + motion.burstY * burstEase + this.interaction * 0.04;
     this.group.position.z = this.homeZ + this.flightOffset.z;
-    const flightBank = this.flightPassedCamera ? this.flightHeading.dot(this.flightSide) * 0.2 : 0;
+    const flightBank = this.flightHeading.dot(this.flightSide) * 0.2;
     this.group.rotation.z = Math.sin(time * 0.29 + this.phase) * 0.045 * idleFactor
       + flightBank * flightEase
       + motion.burstX * 0.025;
