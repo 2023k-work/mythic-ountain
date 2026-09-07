@@ -1,4 +1,4 @@
-import { Group, Matrix4, Vector3 } from 'three';
+import { Group, Matrix4 } from 'three';
 import './ar-style.css';
 import { M1ExperienceController } from './m1-experience-controller';
 import { butterflyPositionsByTargetId } from './m1-group-manifest';
@@ -53,8 +53,6 @@ let activeRuntime: TargetRuntime | undefined;
 let loadedWingVariants = new Map<WingVariantId, PreparedWingVariant>();
 let startInFlight = false;
 let trackingGeneration = 0;
-const cameraWorldPosition = new Vector3();
-const cameraLocalPosition = new Vector3();
 
 function setTrackingState(next: TrackingState): void {
   trackingState = next;
@@ -87,15 +85,6 @@ function retainAnchorDuringGrace(runtime: TargetRuntime): void {
   if (!runtime.hasVisibleMatrix) return;
   runtime.contentRoot.matrix.copy(runtime.lastVisibleMatrix);
   runtime.contentRoot.visible = true;
-}
-
-function captureFlightDirectionsFromCamera(): void {
-  if (!activeRuntime || !trackingAdapter || activeRuntime.experience.getState() !== 'groupFlying') return;
-  const runtime = trackingAdapter.runtime;
-  runtime.scene.updateMatrixWorld(true);
-  runtime.camera.getWorldPosition(cameraWorldPosition);
-  activeRuntime.contentRoot.worldToLocal(cameraLocalPosition.copy(cameraWorldPosition));
-  activeRuntime.actors.forEach((item) => item.setFlightCameraTarget(cameraLocalPosition));
 }
 
 function connectTrackingEvents(runtime: TargetRuntime): void {
@@ -341,7 +330,6 @@ arStage.addEventListener('click', () => {
   }
   if (trackingState !== 'found' || !activeRuntime) return;
   if (activeRuntime.experience.launchGroup()) {
-    captureFlightDirectionsFromCamera();
     statusDetail.textContent = `${activeRuntime.target.id} 群飛已穿過手機位置；重新掃描 ${activeRuntime.target.id} 才會重置。`;
   }
 });

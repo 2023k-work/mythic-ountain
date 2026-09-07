@@ -70,9 +70,10 @@ export class WingActor {
   private readonly amplitudeVariation: number;
   private readonly driftScale: number;
   private readonly flightFrequency: number;
-  private readonly flightTurnRate: number;
-  private readonly flightWander: number;
+  private readonly flightRotationSpeed: number;
+  private readonly flightRotationWobble: number;
   private readonly flightSpeed: number;
+  private readonly flightNormalSpeed: number;
   private homeZ = 0;
   private opacity = 0;
   private opacityTarget = 0;
@@ -80,12 +81,9 @@ export class WingActor {
   private flightTarget = 0;
   private flightTime = 0;
   private flightWingSpeed?: number;
-  private readonly flightApproach = new Vector3();
-  private readonly flightDirection = new Vector3();
-  private readonly flightSide = new Vector3();
-  private readonly flightUp = new Vector3();
-  private readonly flightHeading = new Vector3();
-  private readonly flightDesiredHeading = new Vector3();
+  private flightAngle = 0;
+  private readonly flightForward = new Vector3();
+  private readonly flightNormal = new Vector3(0, 0, 1);
   private readonly flightPosition = new Vector3();
   private readonly flightOffset = new Vector3();
   private interaction = 0;
@@ -103,9 +101,11 @@ export class WingActor {
     this.amplitudeVariation = 0.72 + Math.random() * 0.52;
     this.driftScale = driftScale;
     this.flightFrequency = 0.85 + Math.random() * 0.7;
-    this.flightTurnRate = 1.8 + Math.random() * 1.5;
-    this.flightWander = 0.08 + Math.random() * 0.1;
+    const rotationDirection = Math.random() < 0.5 ? -1 : 1;
+    this.flightRotationSpeed = rotationDirection * (0.24 + Math.random() * 0.34);
+    this.flightRotationWobble = 0.06 + Math.random() * 0.08;
     this.flightSpeed = (FLIGHT_BASE_SPEED * FLIGHT_SPEED_SCALE) * (0.88 + Math.random() * 0.24);
+    this.flightNormalSpeed = (FLIGHT_BASE_SPEED * FLIGHT_SPEED_SCALE) * (0.22 + Math.random() * 0.12);
     this.leftPivot.add(this.leftScale);
     this.rightPivot.add(this.rightScale);
     this.group.add(this.leftPivot, this.rightPivot);
@@ -129,44 +129,18 @@ export class WingActor {
   }
 
   setFlying(flying: boolean): void {
-    if (flying && this.flightTarget === 0) this.flightTime = 0;
+    if (flying && this.flightTarget === 0) {
+      this.flightTime = 0;
+      // The sprite's local +Y is its visual forward direction. Give every butterfly
+      // an independent full-circle heading when it takes off.
+      this.flightAngle = Math.random() * Math.PI * 2;
+    }
     this.flightTarget = flying ? 1 : 0;
     if (!flying) {
       this.flightPosition.set(0, 0, 0);
       this.flightOffset.set(0, 0, 0);
       this.flightWingSpeed = undefined;
     }
-  }
-
-  setFlightCameraTarget(cameraPosition: Vector3): void {
-    this.flightApproach.set(
-      cameraPosition.x - this.homeX,
-      cameraPosition.y - this.homeY,
-      cameraPosition.z - this.homeZ,
-    );
-    if (this.flightApproach.lengthSq() < 0.000001) {
-      this.flightApproach.set(0, 0, 1);
-    } else {
-      this.flightApproach.normalize();
-    }
-
-    // Match the Unity movement's smooth turning, while entering the rearward cone immediately
-    // on takeoff. The path has no destination point.
-    this.flightSide.set(-this.flightApproach.y, this.flightApproach.x, 0);
-    if (this.flightSide.lengthSq() < 0.000001) this.flightSide.set(1, 0, 0);
-    else this.flightSide.normalize();
-    this.flightUp.crossVectors(this.flightApproach, this.flightSide).normalize();
-
-    const coneAngle = 0.24 + Math.random() * 0.22;
-    const coneCosine = Math.cos(coneAngle);
-    const coneSine = Math.sin(coneAngle);
-    const coneAzimuth = Math.random() * Math.PI * 2;
-    this.flightDirection.copy(this.flightApproach).multiplyScalar(coneCosine)
-      .addScaledVector(this.flightSide, coneSine * Math.cos(coneAzimuth))
-      .addScaledVector(this.flightUp, coneSine * Math.sin(coneAzimuth))
-      .normalize();
-    this.flightHeading.copy(this.flightDirection);
-    this.flightPosition.set(0, 0, 0);
   }
 
   setVariant(variant: PreparedWingVariant): void {
@@ -216,14 +190,16 @@ export class WingActor {
     if (this.flightTarget === 1) {
       this.flightTime += deltaSeconds;
       const travel = deltaSeconds * this.flightSpeed;
-      const wanderTime = this.flightTime * this.flightFrequency * Math.PI * 2;
-      this.flightDesiredHeading.copy(this.flightDirection)
-        .addScaledVector(this.flightSide, Math.sin(wanderTime + this.phase) * this.flightWander)
-        .addScaledVector(this.flightUp, Math.cos(wanderTime * 0.73 + this.phase * 0.61) * this.flightWander * 0.72)
-        .normalize();
-      const turnFactor = 1 - Math.exp(-this.flightTurnRate * 0.72 * Math.min(Math.max(deltaSeconds, 0), 0.1));
-      this.flightHeading.lerp(this.flightDesiredHeading, turnFactor).normalize();
-      this.flightPosition.addScaledVector(this.flightHeading, travel);
+      const turnWave = Math.sin(this.flightTime * this.flightFrequency * Math.PI * 2 + this.phase) * this.flightRotationWobble;
+      this.flightAngle += (this.flightRotationSpeed + turnWave) * deltaSeconds;
+      // Positive Z rotation maps the sprite's local +Y forward vector to (-sin, cos).
+      // Keeping this sign aligned with group.rotation.z prevents the flight turn from
+      // appearing opposite to the butterfly's visual rotation.
+      this.flightForward.set(-Math.sin(this.flightAngle), Math.cos(this.flightAngle), 0);
+      this.flightPosition.addScaledVector(this.flightForward, travel);
+      // The target anchor's local +Z is the scanned image normal. This depth component
+      // remains independent from the in-plane heading, so every butterfly leaves the image.
+      this.flightPosition.addScaledVector(this.flightNormal, deltaSeconds * this.flightNormalSpeed);
     }
     this.flightOffset.copy(this.flightPosition).multiplyScalar(flightEase);
     if (this.leftMesh) this.leftMesh.material.opacity = this.opacity;
@@ -248,10 +224,8 @@ export class WingActor {
     this.group.position.x = this.homeX + idleX + this.flightOffset.x + motion.burstX * burstEase;
     this.group.position.y = this.homeY + idleY + this.flightOffset.y + motion.burstY * burstEase + this.interaction * 0.04;
     this.group.position.z = this.homeZ + this.flightOffset.z;
-    const flightBank = this.flightHeading.dot(this.flightSide) * 0.2;
-    this.group.rotation.z = Math.sin(time * 0.29 + this.phase) * 0.045 * idleFactor
-      + flightBank * flightEase
-      + motion.burstX * 0.025;
+    const idleRotation = Math.sin(time * 0.29 + this.phase) * 0.045 + motion.burstX * 0.025;
+    this.group.rotation.z = idleRotation * idleFactor + this.flightAngle * flightEase;
     this.leftScale.rotation.y = sample.leftFlap;
     this.rightScale.rotation.y = -sample.rightFlap;
     this.leftScale.rotation.z = sample.leftTilt;
