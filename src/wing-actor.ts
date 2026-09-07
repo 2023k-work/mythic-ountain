@@ -73,6 +73,7 @@ export class WingActor {
   private readonly flightRotationSpeed: number;
   private readonly flightRotationWobble: number;
   private readonly flightSpeed: number;
+  private readonly flightAimSpeed: number;
   private readonly flightNormalSpeed: number;
   private homeZ = 0;
   private opacity = 0;
@@ -82,8 +83,12 @@ export class WingActor {
   private flightTime = 0;
   private flightWingSpeed?: number;
   private flightAngle = 0;
+  private flightPassedCamera = false;
   private readonly flightForward = new Vector3();
   private readonly flightNormal = new Vector3(0, 0, 1);
+  private readonly flightCameraPosition = new Vector3(0, 0, 1);
+  private readonly flightCurrentPosition = new Vector3();
+  private readonly flightAim = new Vector3(0, 0, 1);
   private readonly flightPosition = new Vector3();
   private readonly flightOffset = new Vector3();
   private interaction = 0;
@@ -105,6 +110,7 @@ export class WingActor {
     this.flightRotationSpeed = rotationDirection * (0.24 + Math.random() * 0.34);
     this.flightRotationWobble = 0.06 + Math.random() * 0.08;
     this.flightSpeed = (FLIGHT_BASE_SPEED * FLIGHT_SPEED_SCALE) * (0.88 + Math.random() * 0.24);
+    this.flightAimSpeed = (0.01 + Math.random() * 0.09) * (0.9 + Math.random() * 0.1) * FLIGHT_SPEED_SCALE;
     this.flightNormalSpeed = (FLIGHT_BASE_SPEED * FLIGHT_SPEED_SCALE) * (0.22 + Math.random() * 0.12);
     this.leftPivot.add(this.leftScale);
     this.rightPivot.add(this.rightScale);
@@ -134,6 +140,8 @@ export class WingActor {
       // The sprite's local +Y is its visual forward direction. Give every butterfly
       // an independent full-circle heading when it takes off.
       this.flightAngle = Math.random() * Math.PI * 2;
+      this.flightPassedCamera = false;
+      this.flightAim.set(0, 0, 1);
     }
     this.flightTarget = flying ? 1 : 0;
     if (!flying) {
@@ -141,6 +149,10 @@ export class WingActor {
       this.flightOffset.set(0, 0, 0);
       this.flightWingSpeed = undefined;
     }
+  }
+
+  setFlightCameraTarget(cameraPosition: Vector3): void {
+    this.flightCameraPosition.copy(cameraPosition);
   }
 
   setVariant(variant: PreparedWingVariant): void {
@@ -197,6 +209,21 @@ export class WingActor {
       // appearing opposite to the butterfly's visual rotation.
       this.flightForward.set(-Math.sin(this.flightAngle), Math.cos(this.flightAngle), 0);
       this.flightPosition.addScaledVector(this.flightForward, travel);
+      this.flightCurrentPosition.set(
+        this.homeX + this.flightPosition.x,
+        this.homeY + this.flightPosition.y,
+        this.homeZ + this.flightPosition.z,
+      );
+      if (!this.flightPassedCamera) {
+        this.flightAim.copy(this.flightCameraPosition).sub(this.flightCurrentPosition);
+        const cameraDistance = this.flightAim.length();
+        if (cameraDistance < 0.05) this.flightPassedCamera = true;
+        if (cameraDistance > 0.000001) this.flightAim.multiplyScalar(1 / cameraDistance);
+        else this.flightAim.set(0, 0, 1);
+      }
+      // Equivalent to Unity's transform.Translate(..., Space.Self) after LookAt:
+      // follow the camera-facing direction with a separate, slower parent motion.
+      this.flightPosition.addScaledVector(this.flightAim, deltaSeconds * this.flightAimSpeed);
       // The target anchor's local +Z is the scanned image normal. This depth component
       // remains independent from the in-plane heading, so every butterfly leaves the image.
       this.flightPosition.addScaledVector(this.flightNormal, deltaSeconds * this.flightNormalSpeed);
