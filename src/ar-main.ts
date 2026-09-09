@@ -1,4 +1,4 @@
-import { Group, Matrix4, Vector3 } from 'three';
+import { Group, Matrix4 } from 'three';
 import './ar-style.css';
 import { M1ExperienceController } from './m1-experience-controller';
 import { butterflyPositionsByTargetId } from './m1-group-manifest';
@@ -53,8 +53,6 @@ let activeRuntime: TargetRuntime | undefined;
 let loadedWingVariants = new Map<WingVariantId, PreparedWingVariant>();
 let startInFlight = false;
 let trackingGeneration = 0;
-const cameraWorldPosition = new Vector3();
-const cameraLocalPosition = new Vector3();
 
 function setTrackingState(next: TrackingState): void {
   trackingState = next;
@@ -87,15 +85,6 @@ function retainAnchorDuringGrace(runtime: TargetRuntime): void {
   if (!runtime.hasVisibleMatrix) return;
   runtime.contentRoot.matrix.copy(runtime.lastVisibleMatrix);
   runtime.contentRoot.visible = true;
-}
-
-function updateFlightDirectionsFromCamera(): void {
-  if (!activeRuntime || !trackingAdapter || activeRuntime.experience.getState() !== 'groupFlying') return;
-  const runtime = trackingAdapter.runtime;
-  runtime.scene.updateMatrixWorld(true);
-  runtime.camera.getWorldPosition(cameraWorldPosition);
-  activeRuntime.contentRoot.worldToLocal(cameraLocalPosition.copy(cameraWorldPosition));
-  activeRuntime.actors.forEach((item) => item.setFlightCameraTarget(cameraLocalPosition));
 }
 
 function connectTrackingEvents(runtime: TargetRuntime): void {
@@ -282,7 +271,6 @@ async function startTracking(): Promise<void> {
     renderer.setAnimationLoop((now: number) => {
       const deltaSeconds = Math.min(Math.max((now - previous) / 1000, 0), 0.05);
       previous = now;
-      updateFlightDirectionsFromCamera();
       targetRuntimes.forEach((targetRuntime) => {
         targetRuntime.actors.forEach((item) => item.update(now / 1000, { speed: 0.92, amplitude: 0.9, burst: 0 }, { burstX: 0, burstY: 0, burst: 0 }, deltaSeconds));
         if (targetRuntime.graceUntil !== 0 && performance.now() >= targetRuntime.graceUntil) {
@@ -341,9 +329,13 @@ arStage.addEventListener('click', () => {
     return;
   }
   if (trackingState !== 'found' || !activeRuntime) return;
-  if (activeRuntime.experience.launchGroup()) {
-    updateFlightDirectionsFromCamera();
-    statusDetail.textContent = `${activeRuntime.target.id} 群飛已穿過手機位置；重新掃描 ${activeRuntime.target.id} 才會重置。`;
+  const experience = activeRuntime.experience;
+  if (experience.getState() === 'interactionReady' && experience.launchGroup()) {
+    statusDetail.textContent = `${activeRuntime.target.id} 群飛已直線飛離；再次點擊才會漸淡，重新掃描才會重置。`;
+    return;
+  }
+  if (experience.getState() === 'groupFlying' && experience.fadeGroup()) {
+    statusDetail.textContent = `${activeRuntime.target.id} 蝴蝶正在漸淡；重新掃描才會重置。`;
   }
 });
 repositoryLink.addEventListener('click', (event) => event.stopPropagation());

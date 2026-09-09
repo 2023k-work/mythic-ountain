@@ -11,6 +11,7 @@ export class M1ExperienceController {
   private state: M1ExperienceState = 'scanning';
   private groupRevealed = false;
   private groupDeparted = false;
+  private groupFadeRequested = false;
 
   constructor(private readonly callbacks: M1ExperienceCallbacks) {}
 
@@ -18,7 +19,7 @@ export class M1ExperienceController {
     if (!this.groupRevealed) {
       this.groupRevealed = true;
     }
-    this.callbacks.onRevealGroup();
+    if (!this.groupFadeRequested) this.callbacks.onRevealGroup();
     this.state = this.groupDeparted ? 'groupFlying' : 'interactionReady';
   }
 
@@ -41,10 +42,18 @@ export class M1ExperienceController {
     return true;
   }
 
+  fadeGroup(): boolean {
+    if (this.state !== 'groupFlying' || this.groupFadeRequested) return false;
+    this.groupFadeRequested = true;
+    this.callbacks.onFadeOutGroup();
+    return true;
+  }
+
   resetExperience(): void {
     this.state = 'resetting';
     this.groupRevealed = false;
     this.groupDeparted = false;
+    this.groupFadeRequested = false;
     this.callbacks.onReset();
     this.state = 'scanning';
   }
